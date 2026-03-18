@@ -7,6 +7,11 @@ config/.env
 
 logs/
 db/
+storage/raw/
+storage/processed/
+storage/images/
+storage/*.db
+Books.csv
 
 airflow.cfg
 airflow.db
