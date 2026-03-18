@@ -1,0 +1,2 @@
+title,author,image_url,utility,local_image_path,price,class,appreciation,read_count,order_count,bought_count,source
+Book B,Unknown,,N/A,,15.5,Non-Fiction,Good,85,31,24,sql

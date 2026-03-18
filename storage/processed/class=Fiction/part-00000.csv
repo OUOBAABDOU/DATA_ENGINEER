@@ -1,0 +1,2 @@
+title,author,image_url,utility,local_image_path,price,class,appreciation,read_count,order_count,bought_count,source
+Book A,Unknown,,N/A,,10.99,Fiction,Excellent,120,45,38,sql

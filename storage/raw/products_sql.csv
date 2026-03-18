@@ -1,0 +1,4 @@
+id,name,category,price,read_count,order_count,bought_count,appreciation
+1,Book A,Fiction,10.99,120,45,38,Excellent
+2,Book B,Non-Fiction,15.5,85,31,24,Good
+3,Magazine C,Magazine,5.0,42,18,12,Average

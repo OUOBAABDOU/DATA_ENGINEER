@@ -1,0 +1,14 @@
+.venv/
+.pytest_cache/
+__pycache__/
+*.py[cod]
+
+config/.env
+
+logs/
+db/
+
+airflow.cfg
+airflow.db
+airflow.db-journal
+airflow-webserver.pid
