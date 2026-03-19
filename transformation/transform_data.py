@@ -4,11 +4,14 @@ import os
 import logging
 import hashlib
 from urllib.parse import urlparse
+from pathlib import Path
 
 import requests
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
+IMAGE_DOWNLOAD_WARNING_LIMIT = 5
+image_download_warning_count = 0
 
 UNIFIED_COLUMNS = [
     'title',
@@ -82,6 +85,7 @@ def normalize_image_url(url):
 
 
 def download_image(url, images_dir):
+    global image_download_warning_count
     normalized_url = normalize_image_url(url)
     if not normalized_url:
         return ""
@@ -89,6 +93,8 @@ def download_image(url, images_dir):
     parsed = urlparse(normalized_url)
     _, extension = os.path.splitext(parsed.path)
     if not extension:
+        extension = ".jpg"
+    elif len(extension) > 5:
         extension = ".jpg"
 
     filename = f"{hashlib.sha256(normalized_url.encode('utf-8')).hexdigest()}{extension.lower()}"
@@ -102,9 +108,13 @@ def download_image(url, images_dir):
         response.raise_for_status()
         with open(local_path, "wb") as image_file:
             image_file.write(response.content)
-        return local_path
+        return str(Path(local_path).resolve())
     except requests.RequestException as exc:
-        logger.warning("Failed to download image %s: %s", normalized_url, exc)
+        if image_download_warning_count < IMAGE_DOWNLOAD_WARNING_LIMIT:
+            logger.warning("Failed to download image %s: %s", normalized_url, exc)
+            image_download_warning_count += 1
+            if image_download_warning_count == IMAGE_DOWNLOAD_WARNING_LIMIT:
+                logger.warning("Additional image download failures will be suppressed.")
         return ""
 
 
@@ -153,8 +163,7 @@ def transform_data():
                     books_df['image_url'] = books_df['image_url'].apply(normalize_image_url)
                     books_df['price'] = books_df['price'].astype(str).str.replace(r'[^0-9.]', '', regex=True)
                     books_df['price'] = pd.to_numeric(books_df['price'], errors='coerce').fillna(0.0)
-                    # books_df['local_image_path'] = books_df['image_url'].apply(lambda url: download_image(url, images_dir))
-                    books_df['local_image_path'] = ""
+                    books_df['local_image_path'] = books_df['image_url'].apply(lambda url: download_image(url, images_dir))
                     books_df['appreciation'] = books_df['class']
                     books_df = ensure_metric_columns(books_df)
                     books_df['source'] = 'website'

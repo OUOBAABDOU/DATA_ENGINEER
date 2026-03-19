@@ -3,6 +3,7 @@ import pandas as pd
 import os
 import glob
 import matplotlib.pyplot as plt
+import base64
 
 st.title("ETL Data Visualization Dashboard")
 
@@ -23,6 +24,49 @@ def resolve_image_source(row):
     if pd.notna(local_image_path) and str(local_image_path).strip() and os.path.exists(str(local_image_path)):
         return str(local_image_path)
     return row.get('image_url', '')
+
+
+def build_placeholder_image(title):
+    safe_title = str(title or "No image").replace("&", "&amp;").replace("<", "&lt;").replace(">", "&gt;")
+    svg = f"""
+    <svg xmlns="http://www.w3.org/2000/svg" width="320" height="460" viewBox="0 0 320 460">
+        <rect width="320" height="460" fill="#f0ede6"/>
+        <rect x="18" y="18" width="284" height="424" rx="18" fill="#d9d2c3"/>
+        <text x="160" y="185" text-anchor="middle" font-family="Georgia, serif" font-size="24" fill="#4b4338">
+            Image unavailable
+        </text>
+        <text x="160" y="235" text-anchor="middle" font-family="Georgia, serif" font-size="18" fill="#6a5f50">
+            {safe_title[:42]}
+        </text>
+    </svg>
+    """.strip()
+    encoded = base64.b64encode(svg.encode("utf-8")).decode("ascii")
+    return f"data:image/svg+xml;base64,{encoded}"
+
+
+def render_gallery_image(row):
+    image_source = str(row.get('display_image', '') or '').strip()
+    placeholder = build_placeholder_image(row.get('title', 'No image'))
+
+    if image_source and os.path.exists(image_source):
+        st.image(image_source, caption=row['title'], width="stretch")
+        return
+
+    final_source = image_source or placeholder
+    st.markdown(
+        f"""
+        <div style="margin-bottom: 0.5rem;">
+            <img
+                src="{final_source}"
+                onerror="this.onerror=null;this.src='{placeholder}';"
+                alt="{row['title']}"
+                style="width: 100%; border-radius: 12px; object-fit: cover; background: #f0ede6;"
+            />
+        </div>
+        """,
+        unsafe_allow_html=True,
+    )
+    st.caption(row['title'])
 
 
 def get_image_status(row):
@@ -217,7 +261,7 @@ if os.path.exists(processed_dir):
 
                     for index, (_, row) in enumerate(gallery_df.iterrows()):
                         with columns[index % 3]:
-                            st.image(row['display_image'], caption=row['title'], width="stretch")
+                            render_gallery_image(row)
                             st.caption(
                                 f"{row.get('author', 'Unknown')} | "
                                 f"{row.get('theme', 'General')} | "
