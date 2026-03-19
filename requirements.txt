@@ -4,5 +4,5 @@ matplotlib==3.7.5
 pandas==2.2.3
 pytest==8.4.2
 python-dotenv==1.0.1
-requests==2.31.0
+requests==2.32.4
 streamlit==1.44.1
