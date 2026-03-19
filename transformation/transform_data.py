@@ -169,7 +169,11 @@ def transform_data():
         csv_path = os.path.join(raw_dir, 'data.csv')
         if os.path.exists(csv_path):
             try:
-                csv_df = pd.read_csv(csv_path)
+                csv_df = pd.read_csv(
+                    csv_path,
+                    dtype={'Year-Of-Publication': 'string'},
+                    low_memory=False,
+                )
                 if not csv_df.empty:
                     csv_df = select_and_rename_columns(
                         csv_df,
