@@ -12,11 +12,14 @@ from extraction.extract_sql import extract_from_sql
 
 def test_scrape_books():
     # Mock requests
-    with patch('extraction.scrape_books.requests.get') as mock_get:
-        mock_response = MagicMock()
-        mock_response.status_code = 200
-        mock_response.content = b'<html><body><article class="product_pod"><h3><a title="Test Book" href="/catalogue/test-book">Test Book</a></h3><p class="price_color">&pound;10.99</p><p class="instock availability">In stock</p><p class="star-rating One"></p></article></body></html>'
-        mock_get.return_value = mock_response
+    with patch('extraction.scrape_books.requests.Session.get') as mock_get:
+        first_response = MagicMock()
+        first_response.raise_for_status.return_value = None
+        first_response.content = b'<html><body><article class="product_pod"><h3><a title="Test Book" href="/catalogue/test-book">Test Book</a></h3><p class="price_color">&pound;10.99</p><p class="instock availability">In stock</p><p class="star-rating One"></p></article></body></html>'
+        second_response = MagicMock()
+        second_response.raise_for_status.return_value = None
+        second_response.content = b'<html><body></body></html>'
+        mock_get.side_effect = [first_response, second_response]
         books = scrape_books()
         assert len(books) == 1
         assert books[0]['title'] == 'Test Book'
@@ -27,6 +30,8 @@ def test_download_csv():
     # Check if file exists
     path = os.path.join(os.path.dirname(__file__), '..', 'storage', 'raw', 'data.csv')
     assert os.path.exists(path)
+    df = pd.read_csv(path)
+    assert 'Book-Title' in df.columns
     # Clean up
     os.remove(path)
 

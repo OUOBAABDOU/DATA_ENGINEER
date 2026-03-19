@@ -24,11 +24,26 @@ Run MinIO only:
 docker compose up -d minio
 ```
 
+Run Airflow + MinIO (Docker):
+
+```bash
+docker compose up -d --build minio airflow
+docker compose logs -f airflow
+```
+
+Airflow UI: `http://localhost:8080` (user/password: `admin` / `admin`)
+
+Important: the Docker service name is `airflow` (not `apache`).
+
 Run the full pipeline:
 
 ```bash
 python main.py
 ```
+
+Run the ETL with Airflow:
+- Open the Airflow UI
+- Trigger the DAG `etl_pipeline`
 
 Run the dashboard:
 
