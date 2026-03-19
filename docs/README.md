@@ -64,7 +64,7 @@ Start MinIO only:
 docker compose up -d minio
 ```
 
-Start the full Docker stack (`minio` + `airflow`):
+Start the full Docker stack (`minio` + `postgres` + `airflow`):
 
 ```bash
 docker compose up -d --build
@@ -73,6 +73,23 @@ docker compose up -d --build
 Access:
 - Airflow UI: `http://localhost:8080` (`admin` / `admin`)
 - MinIO console: `http://localhost:9001` (`minioadmin` / `minioadmin`)
+
+## Airflow Orchestration
+The primary execution path is the Airflow DAG in `dags/etl_pipeline.py`.
+
+Start the services:
+
+```bash
+docker compose up -d --build
+```
+
+Then open Airflow at `http://localhost:8080` with `admin / admin` and trigger the DAG `etl_pipeline`.
+
+The Airflow stack is split into dedicated services:
+- `airflow-init`
+- `airflow-webserver`
+- `airflow-scheduler`
+- `postgres`
 
 ## Full Execution
 Run the complete ETL pipeline locally:
@@ -111,11 +128,11 @@ streamlit run dashboard.py
 Open `http://localhost:8501`.
 
 ## Airflow Execution
-After starting Docker, trigger the `etl_pipeline` DAG from the Airflow UI or let the scheduler run it according to the DAG configuration.
+After starting Docker, Airflow discovers `dags/etl_pipeline.py` automatically and runs the project through the `etl_pipeline` DAG.
 
-## Reset Behavior for `logs/` and `db/`
-The Airflow service mounts the local `logs/` and `db/` folders directly from the project.
-These folders are cleared at each container start, then recreated by Airflow during initialization.
+## Persistence
+Airflow logs are mounted from the local `logs/` folder.
+Airflow metadata is now stored in the Docker volume `postgres_data` through PostgreSQL.
 
 ## INSD Configuration
 The INSD source can be configured from `docker-compose.yml` without changing the code:

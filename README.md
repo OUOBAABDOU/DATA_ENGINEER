@@ -63,6 +63,42 @@ python -m venv .venv
 pip install -r requirements.txt
 ```
 
+## Run With Airflow
+
+The orchestrated execution path for this project is Airflow.
+
+Start the services:
+
+```bash
+docker compose up -d --build
+```
+
+Open:
+
+- Airflow UI: `http://localhost:8080`
+- MinIO API: `http://localhost:9000`
+- MinIO Console: `http://localhost:9001`
+
+Credentials:
+
+- Airflow: `admin` / `admin`
+- MinIO: `minioadmin` / `minioadmin`
+
+Then:
+
+1. Open the Airflow UI
+2. Activate the DAG `etl_pipeline` if needed
+3. Trigger the DAG
+4. Follow task logs from the Graph or Grid view
+
+The Docker stack now runs a more robust Airflow setup for demo use:
+
+- `postgres` for the Airflow metadata database
+- `airflow-init` for database migration and admin user creation
+- `airflow-webserver` for the UI
+- `airflow-scheduler` for orchestration
+- `minio` for object storage
+
 ## Run Locally
 
 Run the full pipeline:
@@ -71,43 +107,23 @@ Run the full pipeline:
 python main.py
 ```
 
+If MinIO is not running locally, `python main.py` completes the ETL and skips only the final upload step with a warning.
+
 Run the dashboard:
 
 ```bash
 streamlit run dashboard.py
 ```
 
-## Run With Docker
-
-Start MinIO and Airflow:
-
-```bash
-docker compose up -d --build
-```
-
-Available services:
-
-- Airflow UI: `http://localhost:8080`
-- MinIO API: `http://localhost:9000`
-- MinIO Console: `http://localhost:9001`
-
-Default credentials:
-
-- Airflow: `admin` / `admin`
-- MinIO: `minioadmin` / `minioadmin`
-
 ## Airflow Execution
 
-Once the containers are running:
-
-1. Open the Airflow UI
-2. Trigger the DAG `etl_pipeline`
-3. Monitor task logs from the interface
+Airflow loads the DAG from `dags/etl_pipeline.py`.
 
 ## Configuration Notes
 
 - Local execution uses `config/.env`
 - Docker execution overrides MinIO access with the Docker service hostname `minio`
+- Airflow Docker execution uses `LocalExecutor` with PostgreSQL instead of SQLite
 - If an external source is unavailable, some extractors fall back gracefully so the pipeline can still complete
 
 ## Tests

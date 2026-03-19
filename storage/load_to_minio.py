@@ -1,9 +1,10 @@
-import boto3
-import os
-from botocore.exceptions import NoCredentialsError, ClientError
-from dotenv import load_dotenv
 import logging
+import os
 from urllib.parse import urlparse
+
+import boto3
+from botocore.exceptions import ClientError, EndpointConnectionError, NoCredentialsError
+from dotenv import load_dotenv
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
@@ -39,7 +40,7 @@ def build_s3_client(endpoint, access_key, secret_key):
         region_name='us-east-1'
     )
 
-def load_to_minio():
+def load_to_minio(required=True):
     try:
         # Load config
         config_path = os.path.join(os.path.dirname(__file__), '..', 'config', '.env')
@@ -64,6 +65,11 @@ def load_to_minio():
                 logger.warning("Failed to connect to MinIO at %s: %s", candidate_endpoint, exc)
 
         if s3 is None or endpoint is None:
+            if not required:
+                logger.warning(
+                    "MinIO is unavailable. Skipping load step because it is optional for local execution."
+                )
+                return False
             raise last_error
 
         # Create bucket if not exists
@@ -96,11 +102,26 @@ def load_to_minio():
                 logger.info(f"Uploaded {s3_path}")
 
         logger.info(f"Load to MinIO completed successfully. Uploaded {uploaded_files} files.")
+        return True
 
     except NoCredentialsError:
         logger.error("Credentials not available.")
         raise
+    except EndpointConnectionError as e:
+        if not required:
+            logger.warning(
+                "MinIO endpoint is unreachable. Skipping load step because it is optional for local execution."
+            )
+            return False
+        logger.error(f"Error in loading to MinIO: {str(e)}")
+        raise
     except Exception as e:
+        if not required:
+            logger.warning(
+                "MinIO load failed during optional local execution. Skipping load step. Error: %s",
+                str(e),
+            )
+            return False
         logger.error(f"Error in loading to MinIO: {str(e)}")
         raise
 

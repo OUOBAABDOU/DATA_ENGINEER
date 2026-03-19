@@ -36,7 +36,12 @@ def main():
     transform_data()
 
     print("Step 6: Loading data to MinIO...")
-    load_to_minio()
+    minio_loaded = load_to_minio(required=False)
+
+    if minio_loaded:
+        print("MinIO load completed.")
+    else:
+        print("MinIO not available, load step skipped.")
 
     print("ETL Pipeline completed successfully!")
 
